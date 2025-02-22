@@ -15,8 +15,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
-import { Route as PostsIndexImport } from './routes/posts/index'
 import { Route as PostsLayoutImport } from './routes/posts/_layout'
+import { Route as PostsLayoutIndexImport } from './routes/posts/_layout/index'
 
 // Create Virtual Routes
 
@@ -42,15 +42,15 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const PostsIndexRoute = PostsIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PostsRoute,
-} as any)
-
 const PostsLayoutRoute = PostsLayoutImport.update({
   id: '/_layout',
   getParentRoute: () => PostsRoute,
+} as any)
+
+const PostsLayoutIndexRoute = PostsLayoutIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PostsLayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -85,26 +85,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostsLayoutImport
       parentRoute: typeof PostsRoute
     }
-    '/posts/': {
-      id: '/posts/'
+    '/posts/_layout/': {
+      id: '/posts/_layout/'
       path: '/'
       fullPath: '/posts/'
-      preLoaderRoute: typeof PostsIndexImport
-      parentRoute: typeof PostsImport
+      preLoaderRoute: typeof PostsLayoutIndexImport
+      parentRoute: typeof PostsLayoutImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface PostsLayoutRouteChildren {
+  PostsLayoutIndexRoute: typeof PostsLayoutIndexRoute
+}
+
+const PostsLayoutRouteChildren: PostsLayoutRouteChildren = {
+  PostsLayoutIndexRoute: PostsLayoutIndexRoute,
+}
+
+const PostsLayoutRouteWithChildren = PostsLayoutRoute._addFileChildren(
+  PostsLayoutRouteChildren,
+)
+
 interface PostsRouteChildren {
-  PostsLayoutRoute: typeof PostsLayoutRoute
-  PostsIndexRoute: typeof PostsIndexRoute
+  PostsLayoutRoute: typeof PostsLayoutRouteWithChildren
 }
 
 const PostsRouteChildren: PostsRouteChildren = {
-  PostsLayoutRoute: PostsLayoutRoute,
-  PostsIndexRoute: PostsIndexRoute,
+  PostsLayoutRoute: PostsLayoutRouteWithChildren,
 }
 
 const PostsRouteWithChildren = PostsRoute._addFileChildren(PostsRouteChildren)
@@ -112,14 +122,14 @@ const PostsRouteWithChildren = PostsRoute._addFileChildren(PostsRouteChildren)
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/posts': typeof PostsLayoutRoute
-  '/posts/': typeof PostsIndexRoute
+  '/posts': typeof PostsLayoutRouteWithChildren
+  '/posts/': typeof PostsLayoutIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/posts': typeof PostsIndexRoute
+  '/posts': typeof PostsLayoutIndexRoute
 }
 
 export interface FileRoutesById {
@@ -127,8 +137,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/posts': typeof PostsRouteWithChildren
-  '/posts/_layout': typeof PostsLayoutRoute
-  '/posts/': typeof PostsIndexRoute
+  '/posts/_layout': typeof PostsLayoutRouteWithChildren
+  '/posts/_layout/': typeof PostsLayoutIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -136,7 +146,13 @@ export interface FileRouteTypes {
   fullPaths: '/' | '/about' | '/posts' | '/posts/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/about' | '/posts'
-  id: '__root__' | '/' | '/about' | '/posts' | '/posts/_layout' | '/posts/'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/posts'
+    | '/posts/_layout'
+    | '/posts/_layout/'
   fileRoutesById: FileRoutesById
 }
 
@@ -176,17 +192,19 @@ export const routeTree = rootRoute
     "/posts": {
       "filePath": "posts",
       "children": [
-        "/posts/_layout",
-        "/posts/"
+        "/posts/_layout"
       ]
     },
     "/posts/_layout": {
       "filePath": "posts/_layout.tsx",
-      "parent": "/posts"
+      "parent": "/posts",
+      "children": [
+        "/posts/_layout/"
+      ]
     },
-    "/posts/": {
-      "filePath": "posts/index.tsx",
-      "parent": "/posts"
+    "/posts/_layout/": {
+      "filePath": "posts/_layout/index.tsx",
+      "parent": "/posts/_layout"
     }
   }
 }
